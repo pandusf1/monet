@@ -27,25 +27,38 @@ export default function VideoCreator() {
   const [topic, setTopic] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [autoResult, setAutoResult] = useState<any>(null);
+  const [currentStep, setCurrentStep] = useState<string>('');
 
-  const handleAutoGenerate = async () => {
-    if (!topic) return;
+  const handleAutoGenerate = async (useSuggested = false) => {
     setIsGenerating(true);
     setAutoResult(null);
+    setCurrentStep('Analyzing Trends...');
     
     try {
-       const response = await fetch('http://localhost:3001/api/automation/one-click', {
-         method: 'POST',
+      // Step 1: Analyze Trends
+      await new Promise(r => setTimeout(r, 1000));
+      setCurrentStep('Generating Viral Script...');
+      
+      const response = await fetch('http://localhost:3001/api/automation/one-click', {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          topic, 
+          topic: useSuggested ? '' : topic, 
           platform: 'youtube_shorts', 
           tone: 'energetic' 
         }),
       });
+      
+      setCurrentStep('Creating AI Voiceover...');
+      await new Promise(r => setTimeout(r, 1000));
+      
+      setCurrentStep('Assembling & Uploading...');
+      await new Promise(r => setTimeout(r, 1000));
+
       const data = await response.json();
       if (data.success) {
         setAutoResult(data);
+        if (useSuggested) setTopic(data.topic);
       } else {
         alert(data.error || 'Failed to automate video');
       }
@@ -54,6 +67,7 @@ export default function VideoCreator() {
       alert('An error occurred during automation.');
     } finally {
       setIsGenerating(false);
+      setCurrentStep('');
     }
   };
 
@@ -96,14 +110,14 @@ export default function VideoCreator() {
               className="flex-1 bg-gray-900/80 border border-gray-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-500 transition-colors"
             />
             <button 
-              onClick={handleAutoGenerate}
+              onClick={() => handleAutoGenerate(false)}
               disabled={isGenerating || !topic}
               className="bg-white text-black hover:bg-purple-400 hover:text-white px-6 py-3 rounded-xl font-black text-sm flex items-center gap-2 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_20px_rgba(255,255,255,0.2)]"
             >
               {isGenerating ? (
                 <>
                   <Loader2 size={18} className="animate-spin" />
-                  Generating...
+                  {currentStep || 'Generating...'}
                 </>
               ) : (
                 <>
@@ -114,23 +128,62 @@ export default function VideoCreator() {
             </button>
           </div>
 
+          {!isGenerating && !autoResult && (
+            <button 
+              onClick={() => handleAutoGenerate(true)}
+              className="mt-4 text-xs text-purple-400 hover:text-purple-300 font-bold flex items-center gap-1 transition-colors"
+            >
+              <Sparkles size={14} />
+              Don't have a topic? Let AI search viral trends for you.
+            </button>
+          )}
+
           {autoResult && (
-            <div className="mt-6 p-4 bg-green-500/20 border border-green-500/50 rounded-xl animate-in zoom-in duration-300">
-              <div className="flex items-center gap-2 text-green-400 font-bold text-sm mb-2">
-                <CheckCircle2 size={18} />
-                Video Generated & Uploaded!
-              </div>
-              <div className="flex items-center justify-between gap-4">
-                <div className="flex-1">
-                  <p className="text-xs text-gray-300 line-clamp-1 italic">"{autoResult.script}"</p>
+            <div className="mt-6 p-6 bg-green-500/10 border border-green-500/30 rounded-2xl animate-in zoom-in duration-300 space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-green-400 font-bold text-sm">
+                  <CheckCircle2 size={18} />
+                  Video Generated & Uploaded!
                 </div>
+                {autoResult.isSimulation && (
+                  <span className="bg-yellow-500/20 text-yellow-500 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">
+                    Simulation Mode
+                  </span>
+                )}
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-black/40 p-3 rounded-xl border border-white/5">
+                  <p className="text-[10px] text-gray-500 uppercase font-bold mb-1">Topic Used</p>
+                  <p className="text-sm font-bold text-white truncate">{autoResult.topic}</p>
+                </div>
+                <div className="bg-black/40 p-3 rounded-xl border border-white/5">
+                  <p className="text-[10px] text-gray-500 uppercase font-bold mb-1">Voice Status</p>
+                  <p className="text-sm font-bold text-white truncate">{autoResult.voiceStatus}</p>
+                </div>
+              </div>
+
+              <div className="bg-black/20 p-4 rounded-xl">
+                <p className="text-[10px] text-gray-500 uppercase font-bold mb-2">Generated Script</p>
+                <p className="text-xs text-gray-300 italic leading-relaxed">"{autoResult.script}"</p>
+              </div>
+
+              {autoResult.uploadNote && (
+                <div className="bg-blue-500/10 p-3 rounded-xl border border-blue-500/20">
+                  <p className="text-[10px] text-blue-400 font-bold leading-tight">
+                    💡 {autoResult.uploadNote}
+                  </p>
+                </div>
+              )}
+
+              <div className="flex items-center gap-3 pt-2">
                 <a 
                   href={autoResult.publicUrl} 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-2 transition-colors whitespace-nowrap"
+                  className="flex-1 bg-white text-black hover:bg-gray-200 py-3 rounded-xl text-xs font-black flex items-center justify-center gap-2 transition-colors shadow-lg"
                 >
-                  View Video
+                  View on YouTube/TikTok
                   <ExternalLink size={14} />
                 </a>
               </div>
