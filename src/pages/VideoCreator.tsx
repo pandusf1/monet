@@ -34,8 +34,8 @@ export default function VideoCreator() {
     setAutoResult(null);
     
     try {
-      const response = await fetch('http://localhost:3000/api/automation/one-click', {
-        method: 'POST',
+       const response = await fetch('http://localhost:3001/api/automation/one-click', {
+         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           topic, 
