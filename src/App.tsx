@@ -5,6 +5,7 @@ import HookGenerator from "@/pages/HookGenerator";
 import VoiceStudio from "@/pages/VoiceStudio";
 import VideoCreator from "@/pages/VideoCreator";
 import TrendAnalyzer from "@/pages/TrendAnalyzer";
+import Settings from "@/pages/Settings";
 
 // Placeholder components for other pages
 const Placeholder = ({ title }: { title: string }) => (
@@ -64,7 +65,7 @@ export default function App() {
 
         <Route path="/settings" element={
           <Layout>
-            <Placeholder title="Settings" />
+            <Settings />
           </Layout>
         } />
       </Routes>
